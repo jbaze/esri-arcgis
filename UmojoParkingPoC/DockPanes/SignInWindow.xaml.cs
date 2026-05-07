@@ -22,8 +22,9 @@ namespace UmojoParkingPoC.DockPanes
 
         private void OnSignInClick(object sender, RoutedEventArgs e)
         {
-            if (_vm.SignInCommand.CanExecute(PasswordBox.Password))
-                _vm.SignInCommand.Execute(PasswordBox.Password);
+            _vm.Password = PasswordBox.Password;
+            if (_vm.SignInCommand.CanExecute(null))
+                _vm.SignInCommand.Execute(null);
         }
     }
 }

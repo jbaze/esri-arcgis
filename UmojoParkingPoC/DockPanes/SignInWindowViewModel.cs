@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using UmojoParkingPoC.Framework;
 using UmojoParkingPoC.Services;
 
 namespace UmojoParkingPoC.DockPanes
@@ -11,9 +11,7 @@ namespace UmojoParkingPoC.DockPanes
     {
         public SignInWindowViewModel()
         {
-            SignInCommand = new RelayCommand(
-                async parameter => await SignInAsync(parameter as string),
-                parameter => !IsBusy);
+            SignInCommand = new RelayCommand(() => { _ = SignInAsync(); }, () => !IsBusy);
         }
 
         private string _username;
@@ -23,15 +21,13 @@ namespace UmojoParkingPoC.DockPanes
             set => SetProperty(ref _username, value);
         }
 
+        public string Password { private get; set; }
+
         private bool _isBusy;
         public bool IsBusy
         {
             get => _isBusy;
-            set
-            {
-                SetProperty(ref _isBusy, value);
-                (SignInCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            }
+            set => SetProperty(ref _isBusy, value);
         }
 
         private string _errorMessage;
@@ -45,7 +41,7 @@ namespace UmojoParkingPoC.DockPanes
 
         public event EventHandler<bool> RequestClose;
 
-        private async Task SignInAsync(string password)
+        private async Task SignInAsync()
         {
             ErrorMessage = null;
 
@@ -58,7 +54,7 @@ namespace UmojoParkingPoC.DockPanes
             IsBusy = true;
             try
             {
-                var result = await ServiceLocator.ApiClient.SignInAsync(Username, password ?? string.Empty);
+                var result = await ServiceLocator.ApiClient.SignInAsync(Username, Password ?? string.Empty);
                 if (result.Success)
                 {
                     AssetManagerDockPaneViewModel.NotifyAuthStateChanged();
