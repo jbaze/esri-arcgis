@@ -35,6 +35,7 @@
         </group>
         <group id="UmojoParkingPoC_ManageGroup" caption="Manage" appearsOnAddInTab="false">
           <button refID="UmojoParkingPoC_OpenAssetManagerButton" size="large"/>
+          <tool refID="UmojoParkingPoC_SelectAssetTool" size="large"/>
         </group>
       </groups>
 
@@ -63,6 +64,15 @@
                 smallImage="Images\GenericButton16.png">
           <tooltip heading="Asset Manager">Open the Umojo Parking asset dockpane.</tooltip>
         </button>
+        <tool id="UmojoParkingPoC_SelectAssetTool"
+              caption="Select Asset"
+              className="UmojoParkingPoC.MapTools.SelectAssetTool"
+              condition="esri_mapping_mapPane"
+              loadOnClick="true"
+              largeImage="Images\GenericButton32.png"
+              smallImage="Images\GenericButton16.png">
+          <tooltip heading="Select Asset">Click an asset on the map to select it in the list.</tooltip>
+        </tool>
       </controls>
 
       <dockPanes>

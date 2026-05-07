@@ -1,6 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using UmojoParkingPoC.Domain;
+using UmojoParkingPoC.Framework;
 using UmojoParkingPoC.Services;
 
 namespace UmojoParkingPoC.DockPanes
@@ -15,7 +22,7 @@ namespace UmojoParkingPoC.DockPanes
         {
             AuthStateChanged?.Invoke(null, EventArgs.Empty);
             var pane = FrameworkApplication.DockPaneManager.Find(DockPaneId) as AssetManagerDockPaneViewModel;
-            pane?.RefreshAuthState();
+            pane?.OnAuthStateChanged();
         }
 
         public static void Show()
@@ -26,14 +33,23 @@ namespace UmojoParkingPoC.DockPanes
 
         public AssetManagerDockPaneViewModel()
         {
+            RefreshCommand = new RelayCommand(async () => await LoadAssetsAsync(), () => IsAuthenticated && !IsLoading);
             RefreshAuthState();
         }
+
+        public ObservableCollection<ParkingAsset> Assets { get; } = new ObservableCollection<ParkingAsset>();
+
+        public ICommand RefreshCommand { get; }
 
         private bool _isAuthenticated;
         public bool IsAuthenticated
         {
             get => _isAuthenticated;
-            private set => SetProperty(ref _isAuthenticated, value);
+            private set
+            {
+                SetProperty(ref _isAuthenticated, value);
+                (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
         }
 
         private string _authStatusText = "Not signed in";
@@ -54,7 +70,24 @@ namespace UmojoParkingPoC.DockPanes
         public bool IsLoading
         {
             get => _isLoading;
-            set => SetProperty(ref _isLoading, value);
+            set
+            {
+                SetProperty(ref _isLoading, value);
+                (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            }
+        }
+
+        private ParkingAsset _selectedAsset;
+        public ParkingAsset SelectedAsset
+        {
+            get => _selectedAsset;
+            set => SetProperty(ref _selectedAsset, value);
+        }
+
+        public void SelectAssetById(Guid id)
+        {
+            var match = Assets.FirstOrDefault(a => a.Id == id);
+            if (match != null) SelectedAsset = match;
         }
 
         public void RefreshAuthState()
@@ -65,10 +98,57 @@ namespace UmojoParkingPoC.DockPanes
                 ? $"Signed in as {client.CurrentUsername}"
                 : "Not signed in";
         }
-    }
 
-    internal class AssetManagerDockPane_ShowButton : Button
-    {
-        protected override void OnClick() => AssetManagerDockPaneViewModel.Show();
+        private async void OnAuthStateChanged()
+        {
+            RefreshAuthState();
+            if (IsAuthenticated)
+            {
+                await LoadAssetsAsync();
+            }
+            else
+            {
+                Assets.Clear();
+                SelectedAsset = null;
+                StatusMessage = null;
+            }
+        }
+
+        private async Task LoadAssetsAsync()
+        {
+            if (!IsAuthenticated) return;
+
+            IsLoading = true;
+            StatusMessage = "Loading assets...";
+            try
+            {
+                var result = await ServiceLocator.ApiClient.GetAssetsAsync();
+                if (!result.Success)
+                {
+                    StatusMessage = "Error: " + result.ErrorMessage;
+                    return;
+                }
+
+                ReplaceAssets(result.Data);
+                await MapDisplayService.RenderAssetsAsync(result.Data);
+                StatusMessage = $"{result.Data.Count} assets loaded";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = "Error: " + ex.Message;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void ReplaceAssets(IEnumerable<ParkingAsset> source)
+        {
+            Assets.Clear();
+            foreach (var a in source) Assets.Add(a);
+            if (SelectedAsset != null && !Assets.Any(a => a.Id == SelectedAsset.Id))
+                SelectedAsset = null;
+        }
     }
 }
