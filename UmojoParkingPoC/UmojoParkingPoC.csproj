@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <OutputType>Library</OutputType>
+    <RootNamespace>UmojoParkingPoC</RootNamespace>
+    <AssemblyName>UmojoParkingPoC</AssemblyName>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <Configurations>Debug;Release</Configurations>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- ArcGIS Pro install dir. Defaults to Program Files; override with env var if installed elsewhere. -->
+    <ArcGISProDir Condition="'$(ArcGISProDir)' == ''">$(ProgramW6432)\ArcGIS\Pro</ArcGISProDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="ArcGIS.Core">
+      <HintPath>$(ArcGISProDir)\bin\ArcGIS.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Framework">
+      <HintPath>$(ArcGISProDir)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Mapping">
+      <HintPath>$(ArcGISProDir)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Config.daml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Images\**\*.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
