@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -34,12 +35,15 @@ namespace UmojoParkingPoC.DockPanes
         public AssetManagerDockPaneViewModel()
         {
             RefreshCommand = new RelayCommand(async () => await LoadAssetsAsync(), () => IsAuthenticated && !IsLoading);
+            SaveCommand = new RelayCommand(async () => await SaveAsync(), () => IsAuthenticated && !IsLoading && SelectedAsset != null);
             RefreshAuthState();
         }
 
         public ObservableCollection<ParkingAsset> Assets { get; } = new ObservableCollection<ParkingAsset>();
+        public IReadOnlyList<AssetStatus> StatusOptions { get; } = (AssetStatus[])Enum.GetValues(typeof(AssetStatus));
 
         public ICommand RefreshCommand { get; }
+        public ICommand SaveCommand { get; }
 
         private bool _isAuthenticated;
         public bool IsAuthenticated
@@ -48,7 +52,7 @@ namespace UmojoParkingPoC.DockPanes
             private set
             {
                 SetProperty(ref _isAuthenticated, value);
-                (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                RaiseCommandsCanExecute();
             }
         }
 
@@ -73,7 +77,7 @@ namespace UmojoParkingPoC.DockPanes
             set
             {
                 SetProperty(ref _isLoading, value);
-                (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged();
+                RaiseCommandsCanExecute();
             }
         }
 
@@ -81,8 +85,49 @@ namespace UmojoParkingPoC.DockPanes
         public ParkingAsset SelectedAsset
         {
             get => _selectedAsset;
-            set => SetProperty(ref _selectedAsset, value);
+            set
+            {
+                if (SetProperty(ref _selectedAsset, value))
+                {
+                    LoadEditFieldsFromSelection();
+                    RaiseCommandsCanExecute();
+                }
+            }
         }
+
+        // ----- edit form fields -----
+        private string _editName;
+        public string EditName
+        {
+            get => _editName;
+            set => SetProperty(ref _editName, value);
+        }
+
+        private string _editHourlyRate;
+        public string EditHourlyRate
+        {
+            get => _editHourlyRate;
+            set => SetProperty(ref _editHourlyRate, value);
+        }
+
+        private string _editTimeLimit;
+        public string EditTimeLimit
+        {
+            get => _editTimeLimit;
+            set => SetProperty(ref _editTimeLimit, value);
+        }
+
+        private AssetStatus _editStatus;
+        public AssetStatus EditStatus
+        {
+            get => _editStatus;
+            set => SetProperty(ref _editStatus, value);
+        }
+
+        public string LastModifiedDisplay =>
+            SelectedAsset == null
+                ? string.Empty
+                : SelectedAsset.LastModified.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
 
         public void SelectAssetById(Guid id)
         {
@@ -143,12 +188,115 @@ namespace UmojoParkingPoC.DockPanes
             }
         }
 
+        private async Task SaveAsync()
+        {
+            if (SelectedAsset == null) return;
+
+            IsLoading = true;
+            StatusMessage = "Syncing...";
+            try
+            {
+                if (!TryParseRate(EditHourlyRate, out var rate))
+                {
+                    StatusMessage = "Error: Hourly rate must be a number";
+                    return;
+                }
+                if (!TryParseInt(EditTimeLimit, out var timeLimit))
+                {
+                    StatusMessage = "Error: Time limit must be a whole number";
+                    return;
+                }
+
+                var result = await ServiceLocator.ApiClient.UpdateAssetAttributesAsync(
+                    SelectedAsset.Id, EditName, rate, timeLimit, EditStatus);
+
+                if (!result.Success)
+                {
+                    StatusMessage = "Error: " + result.ErrorMessage;
+                    return;
+                }
+
+                ApplyUpdatedAsset(result.Data);
+                await MapDisplayService.UpdateAssetGraphicAsync(result.Data);
+                StatusMessage = "Saved at " + DateTime.Now.ToString("HH:mm:ss");
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = "Error: " + ex.Message;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        private void ApplyUpdatedAsset(ParkingAsset updated)
+        {
+            for (int i = 0; i < Assets.Count; i++)
+            {
+                if (Assets[i].Id == updated.Id)
+                {
+                    Assets[i] = updated;
+                    SelectedAsset = updated;
+                    return;
+                }
+            }
+        }
+
+        private void LoadEditFieldsFromSelection()
+        {
+            if (SelectedAsset == null)
+            {
+                EditName = null;
+                EditHourlyRate = null;
+                EditTimeLimit = null;
+            }
+            else
+            {
+                EditName = SelectedAsset.Name;
+                EditHourlyRate = SelectedAsset.HourlyRate?.ToString("0.00", CultureInfo.CurrentCulture);
+                EditTimeLimit = SelectedAsset.TimeLimitMinutes?.ToString(CultureInfo.CurrentCulture);
+                EditStatus = SelectedAsset.Status;
+            }
+            NotifyPropertyChanged(nameof(LastModifiedDisplay));
+        }
+
         private void ReplaceAssets(IEnumerable<ParkingAsset> source)
         {
             Assets.Clear();
             foreach (var a in source) Assets.Add(a);
             if (SelectedAsset != null && !Assets.Any(a => a.Id == SelectedAsset.Id))
                 SelectedAsset = null;
+        }
+
+        private void RaiseCommandsCanExecute()
+        {
+            (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged();
+            (SaveCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        }
+
+        private static bool TryParseRate(string input, out decimal? value)
+        {
+            if (string.IsNullOrWhiteSpace(input)) { value = null; return true; }
+            if (decimal.TryParse(input, NumberStyles.Number, CultureInfo.CurrentCulture, out var d))
+            {
+                value = d;
+                return true;
+            }
+            value = null;
+            return false;
+        }
+
+        private static bool TryParseInt(string input, out int? value)
+        {
+            if (string.IsNullOrWhiteSpace(input)) { value = null; return true; }
+            if (int.TryParse(input, NumberStyles.Integer, CultureInfo.CurrentCulture, out var n))
+            {
+                value = n;
+                return true;
+            }
+            value = null;
+            return false;
         }
     }
 }
