@@ -39,4 +39,32 @@
     </None>
   </ItemGroup>
 
+  <!--
+    After build, package the add-in as a .esriAddinX (zip with Config.daml at root
+    and dlls under Install\) and copy it to the user's Pro AddIns folder so Pro
+    discovers it on launch. Self-contained; no Pro SDK MSBuild targets required.
+  -->
+  <Target Name="DeployAddIn" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <AddInsFolder>$(USERPROFILE)\Documents\ArcGIS\AddIns\ArcGISPro</AddInsFolder>
+      <AddInPackagePath>$(AddInsFolder)\$(AssemblyName).esriAddinX</AddInPackagePath>
+      <AddInStagingPath>$(IntermediateOutputPath)addin-staging</AddInStagingPath>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(AddInStagingPath)" />
+    <MakeDir Directories="$(AddInStagingPath);$(AddInStagingPath)\Install;$(AddInsFolder)" />
+
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(AddInStagingPath)\Install" />
+    <Copy SourceFiles="$(OutputPath)Config.daml" DestinationFolder="$(AddInStagingPath)" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).pdb"
+          DestinationFolder="$(AddInStagingPath)\Install"
+          Condition="Exists('$(OutputPath)$(AssemblyName).pdb')" />
+
+    <ZipDirectory SourceDirectory="$(AddInStagingPath)"
+                  DestinationFile="$(AddInPackagePath)"
+                  Overwrite="true" />
+
+    <Message Text="Deployed add-in: $(AddInPackagePath)" Importance="high" />
+  </Target>
+
 </Project>

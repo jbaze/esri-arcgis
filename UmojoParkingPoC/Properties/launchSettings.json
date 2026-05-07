@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ArcGIS Pro": {
+      "commandName": "Executable",
+      "executablePath": "%ProgramFiles%\\ArcGIS\\Pro\\bin\\ArcGISPro.exe",
+      "workingDirectory": "%ProgramFiles%\\ArcGIS\\Pro\\bin"
+    }
+  }
+}
