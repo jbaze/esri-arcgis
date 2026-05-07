@@ -1,0 +1,29 @@
+## Visual Studio / .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.cache
+*.dbmdl
+
+## Build output
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+[Oo]ut/
+
+## ArcGIS Pro add-in artifacts
+*.esriAddinX
+*.daml.bak
+
+## OS
+.DS_Store
+Thumbs.db
+
+## NuGet
+packages/
+*.nupkg
