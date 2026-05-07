@@ -15,8 +15,8 @@ namespace UmojoParkingPoC.Services
     {
         public const string LayerName = "Umojo Parking (PoC)";
 
-        private static readonly Dictionary<Guid, GraphicElement> _elementsByAssetId =
-            new Dictionary<Guid, GraphicElement>();
+        private static readonly Dictionary<Guid, (Geometry Geometry, GraphicElement Element)> _byAssetId =
+            new Dictionary<Guid, (Geometry, GraphicElement)>();
 
         public static Task RenderAssetsAsync(IList<ParkingAsset> assets)
         {
@@ -28,14 +28,13 @@ namespace UmojoParkingPoC.Services
                 var existing = layer.GetElementsAsFlattenedList().ToList();
                 if (existing.Count > 0)
                     layer.RemoveElements(existing);
-                _elementsByAssetId.Clear();
+                _byAssetId.Clear();
 
                 foreach (var asset in assets)
                 {
-                    var symbol = BuildSymbol(asset);
-                    var element = layer.AddElement(asset.Geometry, symbol);
-                    element.SetName(asset.Id.ToString("N"));
-                    _elementsByAssetId[asset.Id] = element;
+                    var graphic = BuildGraphic(asset);
+                    var element = layer.AddElement(graphic, asset.Id.ToString("N"));
+                    _byAssetId[asset.Id] = (asset.Geometry, element);
                 }
             });
         }
@@ -47,16 +46,15 @@ namespace UmojoParkingPoC.Services
                 var layer = EnsureGraphicsLayer();
                 if (layer == null) return;
 
-                if (_elementsByAssetId.TryGetValue(asset.Id, out var existing))
+                if (_byAssetId.TryGetValue(asset.Id, out var existing))
                 {
-                    layer.RemoveElement(existing);
-                    _elementsByAssetId.Remove(asset.Id);
+                    layer.RemoveElement(existing.Element);
+                    _byAssetId.Remove(asset.Id);
                 }
 
-                var symbol = BuildSymbol(asset);
-                var element = layer.AddElement(asset.Geometry, symbol);
-                element.SetName(asset.Id.ToString("N"));
-                _elementsByAssetId[asset.Id] = element;
+                var graphic = BuildGraphic(asset);
+                var element = layer.AddElement(graphic, asset.Id.ToString("N"));
+                _byAssetId[asset.Id] = (asset.Geometry, element);
             });
         }
 
@@ -70,12 +68,12 @@ namespace UmojoParkingPoC.Services
                 if (mapUnitsTolerance > 0)
                     probe = GeometryEngine.Instance.Buffer(clickPoint, mapUnitsTolerance);
 
-                foreach (var kvp in _elementsByAssetId)
+                foreach (var kvp in _byAssetId)
                 {
-                    var elementGeom = kvp.Value.GetGraphic()?.Geometry;
-                    if (elementGeom == null) continue;
-                    var aligned = GeometryEngine.Instance.Project(probe, elementGeom.SpatialReference);
-                    if (GeometryEngine.Instance.Intersects(aligned, elementGeom))
+                    var geom = kvp.Value.Geometry;
+                    if (geom == null) continue;
+                    var aligned = GeometryEngine.Instance.Project(probe, geom.SpatialReference);
+                    if (GeometryEngine.Instance.Intersects(aligned, geom))
                         return kvp.Key;
                 }
                 return null;
@@ -94,6 +92,18 @@ namespace UmojoParkingPoC.Services
 
             var glParams = new GraphicsLayerCreationParams { Name = LayerName };
             return LayerFactory.Instance.CreateLayer<GraphicsLayer>(glParams, map);
+        }
+
+        private static CIMGraphic BuildGraphic(ParkingAsset asset)
+        {
+            var symbol = BuildSymbol(asset);
+            return asset.Geometry switch
+            {
+                MapPoint pt => (CIMGraphic)new CIMPointGraphic { Location = pt, Symbol = symbol },
+                Polygon poly => new CIMPolygonGraphic { Polygon = poly, Symbol = symbol },
+                Polyline line => new CIMLineGraphic { Line = line, Symbol = symbol },
+                _ => throw new NotSupportedException($"Unsupported geometry type: {asset.Geometry?.GetType().Name}")
+            };
         }
 
         private static CIMSymbolReference BuildSymbol(ParkingAsset asset)

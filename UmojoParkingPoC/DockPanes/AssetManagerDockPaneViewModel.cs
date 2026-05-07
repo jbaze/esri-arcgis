@@ -8,7 +8,6 @@ using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using UmojoParkingPoC.Domain;
-using UmojoParkingPoC.Framework;
 using UmojoParkingPoC.Services;
 
 namespace UmojoParkingPoC.DockPanes
@@ -34,8 +33,8 @@ namespace UmojoParkingPoC.DockPanes
 
         public AssetManagerDockPaneViewModel()
         {
-            RefreshCommand = new RelayCommand(async () => await LoadAssetsAsync(), () => IsAuthenticated && !IsLoading);
-            SaveCommand = new RelayCommand(async () => await SaveAsync(), () => IsAuthenticated && !IsLoading && SelectedAsset != null);
+            RefreshCommand = new RelayCommand(() => { _ = LoadAssetsAsync(); }, () => IsAuthenticated && !IsLoading);
+            SaveCommand = new RelayCommand(() => { _ = SaveAsync(); }, () => IsAuthenticated && !IsLoading && SelectedAsset != null);
             RefreshAuthState();
         }
 
@@ -49,11 +48,7 @@ namespace UmojoParkingPoC.DockPanes
         public bool IsAuthenticated
         {
             get => _isAuthenticated;
-            private set
-            {
-                SetProperty(ref _isAuthenticated, value);
-                RaiseCommandsCanExecute();
-            }
+            private set => SetProperty(ref _isAuthenticated, value);
         }
 
         private string _authStatusText = "Not signed in";
@@ -74,11 +69,7 @@ namespace UmojoParkingPoC.DockPanes
         public bool IsLoading
         {
             get => _isLoading;
-            set
-            {
-                SetProperty(ref _isLoading, value);
-                RaiseCommandsCanExecute();
-            }
+            set => SetProperty(ref _isLoading, value);
         }
 
         private ParkingAsset _selectedAsset;
@@ -88,14 +79,10 @@ namespace UmojoParkingPoC.DockPanes
             set
             {
                 if (SetProperty(ref _selectedAsset, value))
-                {
                     LoadEditFieldsFromSelection();
-                    RaiseCommandsCanExecute();
-                }
             }
         }
 
-        // ----- edit form fields -----
         private string _editName;
         public string EditName
         {
@@ -267,12 +254,6 @@ namespace UmojoParkingPoC.DockPanes
             foreach (var a in source) Assets.Add(a);
             if (SelectedAsset != null && !Assets.Any(a => a.Id == SelectedAsset.Id))
                 SelectedAsset = null;
-        }
-
-        private void RaiseCommandsCanExecute()
-        {
-            (RefreshCommand as RelayCommand)?.RaiseCanExecuteChanged();
-            (SaveCommand as RelayCommand)?.RaiseCanExecuteChanged();
         }
 
         private static bool TryParseRate(string input, out decimal? value)
