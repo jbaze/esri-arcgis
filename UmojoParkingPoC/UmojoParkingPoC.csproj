@@ -30,6 +30,10 @@
       <HintPath>$(ArcGISProDir)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Extensions">
+      <HintPath>$(ArcGISProDir)\bin\ArcGIS.Desktop.Extensions.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="ArcGIS.Desktop.Mapping">
       <HintPath>$(ArcGISProDir)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
       <Private>False</Private>
