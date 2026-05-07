@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using UmojoParkingPoC.Services;
@@ -12,10 +11,10 @@ namespace UmojoParkingPoC
         public static Module Current =>
             _this ??= (Module)FrameworkApplication.FindModule("UmojoParkingPoC_Module");
 
-        protected override Task<bool> OnStartupAsync()
+        protected override bool Initialize()
         {
             ServiceLocator.ApiClient ??= new MockUmojoApiClient();
-            return Task.FromResult(true);
+            return base.Initialize();
         }
 
         protected override bool CanUnload() => true;
