@@ -1,12 +1,15 @@
 using ArcGIS.Desktop.Framework.Contracts;
+using UmojoParkingPoC.DockPanes;
+using UmojoParkingPoC.Services;
 
 namespace UmojoParkingPoC.Buttons
 {
     internal class SignOutButton : Button
     {
-        protected override void OnClick()
+        protected override async void OnClick()
         {
-            // Wired up in Task 5.
+            await ServiceLocator.ApiClient.SignOutAsync();
+            AssetManagerDockPaneViewModel.NotifyAuthStateChanged();
         }
     }
 }

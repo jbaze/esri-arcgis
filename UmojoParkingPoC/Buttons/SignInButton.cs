@@ -1,4 +1,6 @@
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using UmojoParkingPoC.DockPanes;
 
 namespace UmojoParkingPoC.Buttons
 {
@@ -6,7 +8,12 @@ namespace UmojoParkingPoC.Buttons
     {
         protected override void OnClick()
         {
-            // Wired up in Task 5.
+            var window = new SignInWindow
+            {
+                Owner = FrameworkApplication.Current.MainWindow
+            };
+            window.ShowDialog();
+            AssetManagerDockPaneViewModel.NotifyAuthStateChanged();
         }
     }
 }
