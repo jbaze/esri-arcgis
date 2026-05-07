@@ -5,8 +5,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:local="clr-namespace:UmojoParkingPoC.DockPanes"
+             xmlns:fw="clr-namespace:UmojoParkingPoC.Framework"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="400"
+             d:DesignHeight="700" d:DesignWidth="400"
              d:DataContext="{d:DesignInstance Type=local:AssetManagerDockPaneViewModel}">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -14,6 +15,7 @@
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <fw:StatusToBrushConverter x:Key="StatusToBrush"/>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -21,6 +23,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -36,7 +39,6 @@
 
         <!-- Body -->
         <Grid Grid.Row="1">
-            <!-- Not authenticated placeholder -->
             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
                        Text="Sign in to view assets"
                        Foreground="{DynamicResource Esri_TextStyleDisabledBrush}">
@@ -52,7 +54,6 @@
                 </TextBlock.Style>
             </TextBlock>
 
-            <!-- Authenticated content -->
             <Grid Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -81,8 +82,66 @@
             </Grid>
         </Grid>
 
-        <!-- Status bar -->
-        <Border Grid.Row="2" Padding="10,4"
+        <!-- Edit form -->
+        <Border Grid.Row="2" Padding="10,10"
+                Background="{DynamicResource Esri_BackgroundPanelBrush}"
+                BorderBrush="{DynamicResource Esri_BorderBrush}"
+                BorderThickness="0,1,0,0">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedAsset}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsAuthenticated}" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
+                           Text="Edit selected asset"
+                           FontWeight="SemiBold" Margin="0,0,0,6"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Name" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Hourly rate" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding EditHourlyRate, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Time limit (min)" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding EditTimeLimit, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Status" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                <ComboBox Grid.Row="4" Grid.Column="1"
+                          ItemsSource="{Binding StatusOptions}"
+                          SelectedItem="{Binding EditStatus, Mode=TwoWay}"
+                          Margin="0,0,0,4"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Last modified" VerticalAlignment="Center" Margin="0,4,8,0"/>
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding LastModifiedDisplay}"
+                           Foreground="{DynamicResource Esri_TextStyleDisabledBrush}"
+                           VerticalAlignment="Center" Margin="0,4,0,0"/>
+            </Grid>
+        </Border>
+
+        <!-- Save button + status bar -->
+        <Border Grid.Row="3" Padding="10,6"
                 Background="{DynamicResource Esri_BackgroundPanelBrush}"
                 BorderBrush="{DynamicResource Esri_BorderBrush}"
                 BorderThickness="0,1,0,0">
@@ -90,12 +149,19 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <ProgressBar Grid.Row="0" Height="3" IsIndeterminate="True"
+                <Button Grid.Row="0" Content="Save Changes"
+                        Command="{Binding SaveCommand}" HorizontalAlignment="Right"
+                        MinWidth="120"
+                        Visibility="{Binding IsAuthenticated, Converter={StaticResource BoolToVis}}"/>
+                <ProgressBar Grid.Row="1" Height="3" IsIndeterminate="True"
+                             Margin="0,6,0,0"
                              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
-                <TextBlock Grid.Row="1" Text="{Binding StatusMessage}"
+                <TextBlock Grid.Row="2" Text="{Binding StatusMessage}"
                            Margin="0,4,0,0"
-                           Foreground="{DynamicResource Esri_TextStyleDisabledBrush}"/>
+                           FontWeight="SemiBold"
+                           Foreground="{Binding StatusMessage, Converter={StaticResource StatusToBrush}}"/>
             </Grid>
         </Border>
     </Grid>
