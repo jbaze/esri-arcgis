@@ -1,0 +1,51 @@
+<UserControl x:Class="UmojoParkingPoC.DockPanes.AssetManagerDockPaneView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+             xmlns:local="clr-namespace:UmojoParkingPoC.DockPanes"
+             mc:Ignorable="d"
+             d:DesignHeight="500" d:DesignWidth="400"
+             d:DataContext="{d:DesignInstance Type=local:AssetManagerDockPaneViewModel}">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Padding="10,8"
+                Background="{DynamicResource Esri_BackgroundPanelBrush}"
+                BorderBrush="{DynamicResource Esri_BorderBrush}"
+                BorderThickness="0,0,0,1">
+            <TextBlock Text="{Binding AuthStatusText}"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource Esri_TextStyleEmphasizedBrush}"/>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Text="Sign in to view assets"
+                       Foreground="{DynamicResource Esri_TextStyleDisabledBrush}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Visible"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAuthenticated}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -20,6 +20,61 @@
                   className="Module"
                   autoLoad="false"
                   caption="Umojo Parking Module">
+
+      <tabs>
+        <tab id="UmojoParkingPoC_Tab" caption="Umojo Parking">
+          <group refID="UmojoParkingPoC_AuthGroup"/>
+          <group refID="UmojoParkingPoC_ManageGroup"/>
+        </tab>
+      </tabs>
+
+      <groups>
+        <group id="UmojoParkingPoC_AuthGroup" caption="Account" appearsOnAddInTab="false">
+          <button refID="UmojoParkingPoC_SignInButton" size="large"/>
+          <button refID="UmojoParkingPoC_SignOutButton" size="large"/>
+        </group>
+        <group id="UmojoParkingPoC_ManageGroup" caption="Manage" appearsOnAddInTab="false">
+          <button refID="UmojoParkingPoC_OpenAssetManagerButton" size="large"/>
+        </group>
+      </groups>
+
+      <controls>
+        <button id="UmojoParkingPoC_SignInButton"
+                caption="Sign In"
+                className="UmojoParkingPoC.Buttons.SignInButton"
+                loadOnClick="true"
+                largeImage="Images\GenericButton32.png"
+                smallImage="Images\GenericButton16.png">
+          <tooltip heading="Sign In">Sign in to Umojo (simulated).</tooltip>
+        </button>
+        <button id="UmojoParkingPoC_SignOutButton"
+                caption="Sign Out"
+                className="UmojoParkingPoC.Buttons.SignOutButton"
+                loadOnClick="true"
+                largeImage="Images\GenericButton32.png"
+                smallImage="Images\GenericButton16.png">
+          <tooltip heading="Sign Out">Clear the simulated session.</tooltip>
+        </button>
+        <button id="UmojoParkingPoC_OpenAssetManagerButton"
+                caption="Asset Manager"
+                className="UmojoParkingPoC.Buttons.OpenAssetManagerButton"
+                loadOnClick="true"
+                largeImage="Images\GenericButton32.png"
+                smallImage="Images\GenericButton16.png">
+          <tooltip heading="Asset Manager">Open the Umojo Parking asset dockpane.</tooltip>
+        </button>
+      </controls>
+
+      <dockPanes>
+        <dockPane id="UmojoParkingPoC_AssetManagerDockPane"
+                  caption="Umojo Parking Assets"
+                  className="UmojoParkingPoC.DockPanes.AssetManagerDockPaneViewModel"
+                  dock="group"
+                  dockWith="esri_core_contentsDockPane">
+          <content className="UmojoParkingPoC.DockPanes.AssetManagerDockPaneView"/>
+        </dockPane>
+      </dockPanes>
+
     </insertModule>
   </modules>
 
