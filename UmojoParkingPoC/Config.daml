@@ -5,7 +5,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///$(ArcGISProDir)/bin/ArcGIS.Desktop.Framework.xsd">
 
-  <AddInInfo id="{1f9c0d2a-7e4a-4b3f-9d22-7b5a2c0e1f01}" version="0.1.0" desktopVersion="3.3">
+  <AddInInfo id="{1f9c0d2a-7e4a-4b3f-9d22-7b5a2c0e1f01}" version="0.1.0" desktopVersion="3.6">
     <Name>Umojo Parking PoC</Name>
     <Description>Proof of concept of the Umojo Parking ArcGIS Pro add-in. Mock data and simulated API only.</Description>
     <Image>Images\AddinDesktop32.png</Image>

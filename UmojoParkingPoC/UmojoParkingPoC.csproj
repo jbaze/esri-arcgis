@@ -16,28 +16,15 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- ArcGIS Pro install dir. Defaults to Program Files; override with env var if installed elsewhere. -->
-    <ArcGISProDir Condition="'$(ArcGISProDir)' == ''">$(ProgramW6432)\ArcGIS\Pro</ArcGISProDir>
-  </PropertyGroup>
-
   <ItemGroup>
-    <Reference Include="ArcGIS.Core">
-      <HintPath>$(ArcGISProDir)\bin\ArcGIS.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Framework">
-      <HintPath>$(ArcGISProDir)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Extensions">
-      <HintPath>$(ArcGISProDir)\bin\ArcGIS.Desktop.Extensions.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Mapping">
-      <HintPath>$(ArcGISProDir)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <!--
+      Esri's official NuGet package containing the Pro SDK extension assemblies.
+      Lets the project compile without ArcGIS Pro installed locally. Pro is still
+      required at runtime; assemblies are not copied to output (ExcludeAssets=runtime).
+    -->
+    <PackageReference Include="Esri.ArcGISPro.Extensions30" Version="3.6.0.59527">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
